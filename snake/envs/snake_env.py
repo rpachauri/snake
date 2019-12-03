@@ -3,6 +3,8 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from enum import Enum
 import random
+import numpy as np
+import tensorflow as tf
 
 class Action(Enum):
     up = 0
@@ -46,7 +48,7 @@ class SnakeEnv(gym.Env):
     """
     # locations are represented by tuples of length 2.
     # head is anywhere on the grid and not next to a wall.
-    head = (random.randrange(M - 2) + 1, random.randrange(N - 2) + 1)
+    head = (random.randrange(SnakeEnv.M - 2) + 1, random.randrange(SnakeEnv.N - 2) + 1)
     self.body = [head]
 
     # create a random walk from that head to select the location for the neck.
@@ -57,7 +59,7 @@ class SnakeEnv(gym.Env):
       self.body.append((head[0] + 1, head[1]))
     elif direction == Action.left:
       self.body.append((head[0], head[1] - 1))
-    else # direction == Action.right:
+    else: # direction == Action.right
       self.body.append((head[0], head[1] + 1))
    
     # select a location for the fruit.
@@ -81,15 +83,15 @@ class SnakeEnv(gym.Env):
     # https://stackoverflow.com/questions/15837729/random-choice-from-set-python
     available_locs = set()
     # add all locations
-    for row in range(M):
-      for col in range(N):
+    for row in range(SnakeEnv.M):
+      for col in range(SnakeEnv.N):
         available_locs.add((row, col))
     # remove any location belonging to a body
     for row, col in self.body:
       available_locs.remove((row, col))
     # select a random available location
-    row, col = random.choie(tuple(available_locs))
-    fruit_locs = tf.zeros(M, N)
+    row, col = random.choice(tuple(available_locs))
+    fruit_locs = np.zeros(shape=(SnakeEnv.M, SnakeEnv.N))
     fruit_locs[row][col] = 1.
     return fruit_locs
 
@@ -101,13 +103,13 @@ class SnakeEnv(gym.Env):
         2. Location of neck
         3. Location of all body parts
     """
-    head = tf.zeros(M, N)
+    head = np.zeros(shape=(SnakeEnv.M, SnakeEnv.N))
     head[self.body[0][0], self.body[0][1]] = 1.
 
-    neck = tf.zeros(M, N)
+    neck = np.zeros(shape=(SnakeEnv.M, SnakeEnv.N))
     neck[self.body[1][0], self.body[1][1]] = 1.
 
-    body = tf.zeros(M, N)
+    body = np.zeros(shape=(SnakeEnv.M, SnakeEnv.N))
     for row, col in self.body:
       body[row][col] = 1.
 
