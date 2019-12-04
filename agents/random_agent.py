@@ -15,12 +15,11 @@ print(observation)
 
 # Using _ as temp placeholder variable
 for i in range(1000):
+    print(i)
     # Render the env
-    #env.render()
+    env.render()
 
     # Still a lot more explanation to come for this line!
     obs, reward, done, info = env.step(random.choice(env.action_space)) # take a random action
-    print(obs)
-    print(i)
     if done:
         break
