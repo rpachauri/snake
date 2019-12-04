@@ -9,17 +9,17 @@ env = gym.make('snake-v0')
 
 # Reset the environment to default beginning
 # Default observation variable
-print("Initial Observation")
-observation = env.reset()
-print(observation)
+obs = env.reset()
+env.render()
 
-# Using _ as temp placeholder variable
 for i in range(1000):
-    print(i)
-    # Render the env
-    env.render()
+  # take a random action 
+  # random.randint is inclusive on low and high.
+  action = random.randint(0, env.action_space - 1)
+  obs, reward, done, info = env.step(action)
 
-    # Still a lot more explanation to come for this line!
-    obs, reward, done, info = env.step(random.choice(env.action_space)) # take a random action
-    if done:
-        break
+  print("Taking action: ", action)
+  # Render the env
+  env.render()
+  if done:
+    break
