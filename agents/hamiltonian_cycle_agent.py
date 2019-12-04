@@ -2,7 +2,6 @@
 import gym
 import snake
 import random
-import cProfile
 
 # Make the environment, replace this string with any
 # from the docs. (Some environments have dependencies)
@@ -63,9 +62,10 @@ env.render()
 done = False
 
 while not done:
-  # take a random action
   M = env.observation_space[1]
   N = env.observation_space[2]
+  if N % 2 != 0: # This solution only works for when N % 2 == 0
+    break
   action = get_action(get_head(obs), M, N)
   obs, reward, done, info = env.step(action)
 

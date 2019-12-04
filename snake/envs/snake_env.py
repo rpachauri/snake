@@ -22,7 +22,7 @@ class SnakeEnv(gym.Env):
   M = 10
   N = 20
 
-  action_space = list(Action)
+  action_space = len(Action)
   observation_space = (4, M, N)
 
   HIT_WALL = -100
@@ -38,7 +38,7 @@ class SnakeEnv(gym.Env):
     """Accepts an action and returns a tuple (observation, reward, done, info).
 
       Args:
-        action (object): an action provided by the agent
+        action (int): an action provided by the agent [0,4]
       Returns:
         observation (object): agent's observation of the current environment
         reward (float) : amount of reward returned after previous action
@@ -49,7 +49,7 @@ class SnakeEnv(gym.Env):
     done = False
 
     current_direction = self._current_direction()
-    action = self._adjust_action(action, current_direction)
+    action = self._adjust_action(list(Action)[action], current_direction)
     next_head = self._get_next_head(action)
 
     # move the tail.
@@ -72,13 +72,14 @@ class SnakeEnv(gym.Env):
       self.fruit = None
       # extend the snake's length by adding the location where the tail used to be.
       self.body.append(tail)
-
-      done = False
+      
       # game is over.
-      if len(self.body) == SnakeEnv.M * SnakeEnv.N:
-        done = True
+      if len(self.body) == SnakeEnv.M * SnakeEnv.N: 
+        return self._get_observation(), SnakeEnv.CONSUMED_FRUIT, True, None
 
-      return self._get_observation(), SnakeEnv.CONSUMED_FRUIT, done, None
+      # keep playing.
+      self._set_next_fruit_location()
+      return self._get_observation(), SnakeEnv.CONSUMED_FRUIT, False, None
 
     # Simply moved.
     return self._get_observation(), SnakeEnv.DEFAULT_REWARD, False, None
@@ -195,7 +196,19 @@ class SnakeEnv(gym.Env):
   def _get_observation(self):
     """
       Returns:
-        4 MxN tensors. Each tensor servers a different purpose:
+        A 4xMxN tensor. Each tensor is essentially a bitmap with a different purpose:
+        1. Location of head
+        2. Location of neck
+        3. Location of all body parts
+        4. Location of fruit
+    """
+    head, neck, body, fruit = self._get_locations_as_2D_arrays()
+    return tf.stack([head, neck, body, fruit])
+
+  def _get_locations_as_2D_arrays(self):
+    """
+      Returns:
+        4 MxN 2D numpy arrays. Each array is essentially a bitmap with a different purpose:
         1. Location of head
         2. Location of neck
         3. Location of all body parts
@@ -216,11 +229,43 @@ class SnakeEnv(gym.Env):
     if self.fruit is not None:
       fruit[self.fruit[0]][self.fruit[1]] = 1.
 
-    return tf.stack([head, neck, body, fruit])
+    return head, neck, body, fruit
 
 
   def render(self, mode='human'):
-    pass
+    """Renders the current state of the environment.
+
+    Args:
+      mode (str): Supported modes: {'human'}
+    """
+    horizontal_wall = self._create_horizontal_wall()
+    print(horizontal_wall)
+
+    directions = {Action.up: "^", Action.left: "<", Action.right: ">", Action.down: "v"}
+    head, _, body, fruit = self._get_locations_as_2D_arrays()
+    for m in range(SnakeEnv.M):
+      line = "|"
+      for n in range(SnakeEnv.N):
+        loc = " "
+        if fruit[m][n] == 1:
+          loc = "x"
+        if body[m][n] == 1:
+          loc = "o"
+        if head[m][n] == 1 and len(self.body) > 1:
+          loc = directions[self._current_direction()]
+        line += loc
+      print(line + "|")
+    print(horizontal_wall)
+
+  def _create_horizontal_wall(self):
+    """Used to help render the top or bottom wall in human mode.
+    Returns:
+      str: a string that can be printed when rendering in human mode.
+    """
+    wall = "*"
+    for i in range(SnakeEnv.N):
+      wall += "="
+    return wall + "*"
 
   def close(self):
     pass
