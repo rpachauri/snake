@@ -36,6 +36,9 @@ def get_action(head, M, N):
   # top row goes left.
   if head[0] == 0:
     return 1
+  # last column goes up.
+  if head[1] == N - 1:
+    return 0
 
   # head is on an even column.
   if head[1] % 2 == 0:
@@ -57,9 +60,9 @@ def get_action(head, M, N):
 # Default observation variable
 obs = env.reset()
 env.render()
+done = False
 
-for i in range(1000):
-  print(i)
+while not done:
   # take a random action
   M = env.observation_space[1]
   N = env.observation_space[2]
@@ -68,7 +71,7 @@ for i in range(1000):
 
   print("Taking action: ", action)
   # Render the env
-  #env.render()
+  env.render()
   if done:
     break
 print("done")
