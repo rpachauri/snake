@@ -4,7 +4,6 @@ from gym.utils import seeding
 from enum import Enum
 import random
 import numpy as np
-import tensorflow as tf
 
 class Action(Enum):
     up = 0
@@ -19,16 +18,16 @@ class SnakeEnv(gym.Env):
   https://github.com/openai/gym/blob/master/gym/core.py.
   """
   # Dimension of the snake environment.
-  M = 10
-  N = 20
+  M = 4
+  N = 4
 
   action_space = len(Action)
-  observation_space = (4, M, N)
+  observation_space = np.array((4, M, N))
 
-  HIT_WALL = -100
-  HIT_BODY = -100
-  CONSUMED_FRUIT = 50
-  DEFAULT_REWARD = -1
+  HIT_WALL = -10
+  HIT_BODY = -10
+  CONSUMED_FRUIT = 10
+  DEFAULT_REWARD = 0
 
 
   def __init__(self):
@@ -203,7 +202,7 @@ class SnakeEnv(gym.Env):
         4. Location of fruit
     """
     head, neck, body, fruit = self._get_locations_as_2D_arrays()
-    return tf.stack([head, neck, body, fruit])
+    return np.stack([head, neck, body, fruit])
 
   def _get_locations_as_2D_arrays(self):
     """

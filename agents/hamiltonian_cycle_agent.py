@@ -10,12 +10,11 @@ env = gym.make('snake-v0')
 def get_head(observation):
   """Given the current state of the snake environment, finds where the head of the snake is.
     Args:
-      observation (tf.Tensor): a 4xMxN tensor.
+      observation (numpy array): a 4xMxN ndarray.
     Returns:
       tuple: a tuple of length 2 representing the location of the head of the snake on a 2D grid.
   """
-  # convert the tensor to numpy() for fast slicing.
-  one_hot_head = observation[0].numpy()
+  one_hot_head = observation[0]
   for i in range(one_hot_head.shape[0]):
     for j in range(one_hot_head.shape[1]):
       if one_hot_head[i][j] == 1:
@@ -61,6 +60,7 @@ obs = env.reset()
 env.render()
 done = False
 
+fruit = 0
 while not done:
   M = env.observation_space[1]
   N = env.observation_space[2]
@@ -68,10 +68,12 @@ while not done:
     break
   action = get_action(get_head(obs), M, N)
   obs, reward, done, info = env.step(action)
+  if reward == 50:
+    fruit += 1
 
   print("Taking action: ", action)
   # Render the env
   env.render()
   if done:
     break
-print("done")
+print("# of fruit consumed:", fruit)
