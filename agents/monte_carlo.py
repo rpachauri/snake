@@ -23,14 +23,14 @@ def monte_carlo(state, gym_env, num_rollouts):
     model = copy.deepcopy(gym_env)
     # random.randint is inclusive on low and high.
     a0 = random.randint(0, model.action_space - 1)
-    obs, reward, done, _ = model.step(a0)
+    _, reward, done, _ = model.step(a0)
     score = reward
 
     action_visits[a0] += 1
 
     while not done:
       action = random.randint(0, model.action_space - 1)
-      obs, reward, done, _ = model.step(action)
+      _, reward, done, _ = model.step(action)
       score += reward
 
     action_returns[a0] = ((action_returns[a0] * (action_visits[a0] - 1) / action_visits[a0]) +
@@ -51,8 +51,6 @@ score = 0
 done = False
 
 while not done:
-  # take a random action 
-  # random.randint is inclusive on low and high.
   action = monte_carlo(obs, env, 1000)
   print("Taking action: ", action)
   

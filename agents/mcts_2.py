@@ -5,8 +5,7 @@ import copy
 import random
 
 class MCTSNode():
-  def __init__(self, state, num_actions=5):
-    self.state = state
+  def __init__(self, num_actions=5):
     self.children = {}  # dictionary of moves to MCTSNodes
     self.child_total_value = np.zeros(num_actions, dtype=np.float32)
     self.child_num_visits = np.zeros(num_actions, dtype=np.float32)
@@ -26,25 +25,25 @@ class MCTSNode():
     '''
     # SELECTION
     action = random.randint(0, model.action_space - 1)
-    s, r, done, _ = model.step(action)  # Model is now at child.
+    _, r, done, _ = model.step(action)  # Model is now at child.
 
     # Base case
     if action not in self.children:
       # EXPANSION
-      self.children[action] = MCTSNode(s)
-      value = self.children[action].rollout(model, done)
+      self.children[action] = MCTSNode()
+      value = r + self.children[action].rollout(model, done)
       self.child_total_value[action] += value
       self.child_num_visits[action] += 1
       return value
 
     if done:
-      return 0
+      return r
 
     # Recursive case
-    value = self.children[action].update_tree(model, self.child_num_visits[action])
+    value = self.children[action].update_tree(model) + r
     # BACKUP
-    self.child_num_visits[action] += 1
     self.child_total_value[action] += value
+    self.child_num_visits[action] += 1
     return value
 
   def rollout(self, model, done):
@@ -60,8 +59,8 @@ class MCTS():
   '''
   '''
 
-  def __init__(self, state):
-    self.root = MCTSNode(state)
+  def __init__(self):
+    self.root = MCTSNode()
 
   def action(self, num_rollouts, env):
     '''Returns an action.
@@ -85,6 +84,7 @@ class MCTS():
     # Select the action that had the most visits.
     action_values = np.divide(self.root.child_total_value, self.root.child_num_visits)
     print("action_values:", action_values)
+    print("child_num_visits:", self.root.child_num_visits)
     action = np.argmax(action_values)
 
     # Move this tree to the state resulting from that action.
@@ -103,7 +103,7 @@ env.render()
 score = 0
 done = False
 
-mcts = MCTS(obs)
+mcts = MCTS()
 
 while not done:
   action = mcts.action(1000, env)
