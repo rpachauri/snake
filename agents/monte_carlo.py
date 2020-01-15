@@ -16,26 +16,25 @@ def monte_carlo(state, gym_env, num_rollouts):
     Returns:
       action (int): the best action after performing the Monte Carlo Algorithm.
   '''
-  action_returns = np.zeros(gym_env.action_space)
+  action_total_value = np.zeros(gym_env.action_space)
   action_visits = np.zeros(gym_env.action_space)
 
   for i in range(num_rollouts):
     model = copy.deepcopy(gym_env)
-    # random.randint is inclusive on low and high.
     a0 = random.randint(0, model.action_space - 1)
     _, reward, done, _ = model.step(a0)
-    score = reward
+    value = reward
 
     action_visits[a0] += 1
 
     while not done:
       action = random.randint(0, model.action_space - 1)
       _, reward, done, _ = model.step(action)
-      score += reward
+      value += reward
 
-    action_returns[a0] = ((action_returns[a0] * (action_visits[a0] - 1) / action_visits[a0]) +
-      score * 1 / action_visits[a0])
+    action_total_value[a0] += value
 
+  action_returns = action_total_value / action_visits
   print("action_returns:",  action_returns)
   return np.argmax(action_returns)
 
