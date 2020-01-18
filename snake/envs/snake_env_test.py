@@ -9,6 +9,7 @@ class TestSnakeEnv(unittest.TestCase):
     self.env = gym.make('snake-v0')
     snake.envs.snake_env.SnakeEnv.M = 4
     snake.envs.snake_env.SnakeEnv.N = 4
+    self.env.reset()
 
   def test_facing_down_at_bottom_turn_left(self):
     self.env.body = [(3,0), (2,0)]
@@ -29,6 +30,11 @@ class TestSnakeEnv(unittest.TestCase):
     self.assertEqual(self.env.fruit, (3,3))
     self.assertTrue(done)
     self.assertEqual(reward, snake.envs.snake_env.SnakeEnv.HIT_WALL)
+
+  def test_step_after_done(self):
+    self.env.done = True
+    with self.assertRaises(AssertionError):
+      self.env.step(0)
 
 if __name__ == '__main__':
   unittest.main()

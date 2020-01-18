@@ -6,6 +6,11 @@ import copy
 import random
 
 class UCTNode():
+  WINNING_VALUE = 100000
+  LOSING_VALUE = -100000
+
+  EXPLORATION_CONSTANT = 100
+
   def __init__(self, num_actions=5):
     self.children = {}  # dictionary of moves to UCTNodes
     self.action_priors = np.ones(num_actions, dtype=np.float32)
@@ -19,7 +24,7 @@ class UCTNode():
     return self.action_total_values / (1 + self.action_visits)
 
   def U_value(self, current_num_visits):
-    return np.sqrt(current_num_visits) * self.priors() / (1 + self.action_visits)
+    return UCTNode.EXPLORATION_CONSTANT * np.sqrt(current_num_visits) * self.priors() / (1 + self.action_visits)
 
   def best_action(self, current_num_visits):
     '''Returns the best action based on each Q value and exploration value.
@@ -50,13 +55,19 @@ class UCTNode():
     '''
     # SELECTION
     action = self.best_action(current_num_visits)
+    current_action_value = self.action_total_values[action]
+    #assert current_action_value != UCTNode.WINNING_VALUE
+    #assert current_action_value != UCTNode.LOSING_VALUE
     _, r, done, _ = model.step(action)  # Model is now at child.
     self.action_visits[action] += 1
 
     if done:
       self.action_priors[action] = 0
-      self.action_total_values[action] += r
-      return r
+      if model.has_won():
+        self.action_total_values[action] += UCTNode.WINNING_VALUE
+      else:
+        self.action_total_values[action] += UCTNode.LOSING_VALUE
+      return r #self.action_total_values[action]
 
     # Base case
     if action not in self.children:
@@ -68,9 +79,23 @@ class UCTNode():
 
     # Recursive case
     value = self.children[action].update_tree(model, self.action_visits[action]) + r
+
+    self.adjust_action_value(action, value)
+
     # BACKUP
-    self.action_total_values[action] += value
+    
     return value
+
+  def adjust_action_value(self, action, value):
+    child = self.children[action]
+    # child's actions all lead to losing/winning states
+    if np.all(np.logical_or(
+        child.action_total_values == UCTNode.WINNING_VALUE,
+        child.action_total_values == UCTNode.LOSING_VALUE)):
+      self.action_total_values[action] = np.max(child.action_total_values)
+    elif (self.action_total_values[action] != UCTNode.WINNING_VALUE and
+        self.action_total_values[action] != UCTNode.LOSING_VALUE):
+      self.action_total_values[action] += value
 
   def rollout(self, model):
     value = 0
@@ -101,6 +126,8 @@ class UCT():
     #assert self.root_num_visits - 1 == np.sum(self.root.action_visits)
 
   def _select_action(self):
+    #print("exploitation_exploration:", self.root.Q_value() + self.root.U_value(self.root_num_visits))
+    #print("self.root.action_visits:", self.root.action_visits)
     action = np.argmax(self.root.action_visits)
 
     # Move this tree to the state resulting from that action.

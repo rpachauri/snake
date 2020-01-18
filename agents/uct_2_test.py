@@ -35,7 +35,7 @@ class TestUCT2(unittest.TestCase):
     self.env.body = [(3,0), (2,0)]
     self.env.fruit = (3,3)
     # obscenely long access to a variable
-    wall_reward = snake.envs.snake_env.SnakeEnv.HIT_WALL
+    wall_reward = uct_2.UCTNode.LOSING_VALUE
 
     # perform one rollout
     # perform_rollouts should update action prior of left action to 0
@@ -120,9 +120,8 @@ class TestUCT2(unittest.TestCase):
     ))
     # the action_total_value for this action could be 0 or wall_reward
 
-    #print(uct.root.Q_value() + uct.root.U_value(uct.root_num_visits))
     # perform more rollouts
-    additional_rollouts = 1
+    additional_rollouts = 100
     uct._perform_rollouts(num_rollouts=additional_rollouts, env=self.env)
     self.assertIsNone(np.testing.assert_array_equal(
       uct.root.action_priors,
@@ -137,39 +136,54 @@ class TestUCT2(unittest.TestCase):
       uct.root.action_visits,
       np.array([1, 1, 1, 1 + additional_rollouts, 1], dtype=np.float32)
     ))
-    #print(uct.root.Q_value() + uct.root.U_value(uct.root_num_visits))
 
-    #expected_exploitation_exploration = 
-  
-  '''
-  def test_facing_down_at_bottom(self):
-    self.env.body = [(3,0), (2,0)]
-    self.env.fruit = (3,3)
+  def test_no_options(self):
+    """ Tests a scenario in which all of the agent's options are losing
+    """
+    self.env.body = [(3,3), (2,3), (2,2), (3,2)]
+    self.env.fruit = (0,0)
 
-    # test UCTNode._perform_rollouts()
     uct = uct_2.UCT()
-    uct._perform_rollouts(num_rollouts=1000, env=self.env)
-    self.assertEqual(uct.root_num_visits, 1001)
-    self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_priors,
-      np.array([0, 0, 0, 1, 0], dtype=np.float32)
-    ))
-    self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_visits,
-      np.array([1, 1, 1, 996, 1], dtype=np.float32)
-    ))
+    uct._perform_rollouts(num_rollouts=100, env=self.env)
     self.assertIsNone(np.testing.assert_array_equal(
       uct.root.action_total_values,
-      np.array([-10, -10, -10, 1, -10], dtype=np.float32)
+      np.ones(5, dtype=np.float32) * uct_2.UCTNode.LOSING_VALUE
     ))
-    
-    # test UCTNode._select_action()
-    got_action = uct._select_action()
-    self.assertEqual(got_action, 3)
-    self.assertEqual(uct.root_num_visits, 996)
-  
-   #TODO uncomment this test
-  '''
+
+  def test_greedy_losing(self):
+    """ Tests a scenario in which the agent should not
+      take a greedy action that would result in a loss
+    """
+    self.env.body = [(2,3), (2,2), (3,2)]
+    self.env.fruit = (3,3)
+
+    uct = uct_2.UCT()
+    # perform a large number of rollouts
+    # down should show that it'll lead to a losing state
+    num_rollouts = 1000
+    uct._perform_rollouts(num_rollouts=num_rollouts, env=self.env)
+    #print(uct.root.children[2].action_total_values)
+    #print(uct.root.children[2].action_visits)
+
+    #print(uct.root.children[2].children[1].action_total_values)
+    #print(uct.root.children[2].children[1].action_visits)
+    #TODO actually write a test
+
+
+  def test_adjust_action(self):
+    self.env.body = [(2,3), (2,2), (2,1), (3,1), (3,0)]
+    self.env.fruit = (3,3)
+
+    uct = uct_2.UCT()
+    # perform a large number of rollouts
+    # down should show that it'll lead to a losing state
+    num_rollouts = 1000
+    uct._perform_rollouts(num_rollouts=num_rollouts, env=self.env)
+    #print(uct.root.children)
+    #print(uct.root.children[2].children[1].action_total_values)
+    #print(uct.root.children[2].children[1].action_visits)
+    #print(uct.root.action_total_values)
+    #print(uct.root.action_visits)
 
 
 if __name__ == '__main__':

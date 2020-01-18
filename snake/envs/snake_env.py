@@ -31,6 +31,7 @@ class SnakeEnv(gym.Env):
 
 
   def __init__(self):
+    self.done = True
     pass
 
   def step(self, action):
@@ -44,8 +45,10 @@ class SnakeEnv(gym.Env):
         done (bool): whether the episode has ended
         info (dict): contains auxiliary diagnostic information
     """
+    # if we are already in a terminal state, we cannot take a step
+    assert not self.done
+
     reward = SnakeEnv.DEFAULT_REWARD
-    done = False
 
     current_direction = self._current_direction()
     action = self._adjust_action(list(Action)[action], current_direction)
@@ -57,11 +60,13 @@ class SnakeEnv(gym.Env):
 
     # Hit wall.
     if next_head[0] < 0 or next_head[0] >= SnakeEnv.M or next_head[1] < 0 or next_head[1] >= SnakeEnv.N:
-      return self._get_observation(), SnakeEnv.HIT_WALL, True, None
+      self.done = True
+      return self._get_observation(), SnakeEnv.HIT_WALL, self.done, None
     
     # Hit body.
     if next_head in self.body:
-      return self._get_observation(), SnakeEnv.HIT_BODY, True, None
+      self.done = True
+      return self._get_observation(), SnakeEnv.HIT_BODY, self.done, None
 
     # move the head.
     self.body.insert(0, next_head)
@@ -73,15 +78,16 @@ class SnakeEnv(gym.Env):
       self.body.append(tail)
       
       # game is over.
-      if self.has_won(): 
-        return self._get_observation(), SnakeEnv.CONSUMED_FRUIT, True, None
+      if self.has_won():
+        self.done = True
+        return self._get_observation(), SnakeEnv.CONSUMED_FRUIT, self.done, None
 
       # keep playing.
       self._set_next_fruit_location()
-      return self._get_observation(), SnakeEnv.CONSUMED_FRUIT, False, None
+      return self._get_observation(), SnakeEnv.CONSUMED_FRUIT, self.done, None
 
     # Simply moved.
-    return self._get_observation(), SnakeEnv.DEFAULT_REWARD, False, None
+    return self._get_observation(), SnakeEnv.DEFAULT_REWARD, self.done, None
 
   def has_won(self):
     """ Returns true if this env is in a state that would be considered "won"
@@ -160,6 +166,8 @@ class SnakeEnv(gym.Env):
     """
     # locations are represented by tuples of length 2.
     # head is anywhere on the grid and not next to a wall.
+    self.done = False
+
     head = (random.randrange(SnakeEnv.M - 2) + 1, random.randrange(SnakeEnv.N - 2) + 1)
     self.body = [head]
 
