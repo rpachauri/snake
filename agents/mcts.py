@@ -33,10 +33,6 @@ class MCTSNode():
     )[0]
     _, r, done, _ = model.step(action)  # Model is now at child.
 
-    if done:
-      self.action_priors[action] = 0
-      return r
-
     # Base case
     if action not in self.children:
       # EXPANSION
@@ -45,6 +41,10 @@ class MCTSNode():
       self.action_total_values[action] += value
       self.action_visits[action] += 1
       return value
+    
+    if done:
+      self.action_priors[action] = 0
+      return r
 
     # Recursive case
     value = self.children[action].update_tree(model) + r
@@ -57,8 +57,8 @@ class MCTSNode():
     value = 0
     while not done:
       action = random.randint(0, model.action_space - 1)
-      _, reward, done, _ = model.step(action)
-      value += reward
+      _, r, done, _ = model.step(action)
+      value += r
     return value
 
 class MCTS():
@@ -117,7 +117,7 @@ done = False
 mcts = MCTS()
 
 while not done:
-  action = mcts.action(2000, env)
+  action = mcts.action(1000, env)
   print("Taking action: ", action)
   
   obs, reward, done, info = env.step(action)

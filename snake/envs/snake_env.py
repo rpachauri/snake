@@ -73,7 +73,7 @@ class SnakeEnv(gym.Env):
       self.body.append(tail)
       
       # game is over.
-      if len(self.body) == SnakeEnv.M * SnakeEnv.N: 
+      if self.has_won(): 
         return self._get_observation(), SnakeEnv.CONSUMED_FRUIT, True, None
 
       # keep playing.
@@ -82,6 +82,13 @@ class SnakeEnv(gym.Env):
 
     # Simply moved.
     return self._get_observation(), SnakeEnv.DEFAULT_REWARD, False, None
+
+  def has_won(self):
+    """ Returns true if this env is in a state that would be considered "won"
+
+    Definition of "won": the length of the snake's body equals SnakeEnv.M * SnakeEnv.N
+    """
+    return len(self.body) == SnakeEnv.M * SnakeEnv.N
 
 
   def _current_direction(self):
