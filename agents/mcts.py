@@ -1,6 +1,7 @@
 import gym
 import snake
 import numpy as np
+np.seterr(divide='ignore', invalid='ignore')
 import copy
 import random
 
@@ -32,7 +33,11 @@ class MCTSNode():
       weights=self.action_priors / np.sum(self.action_priors)
     )[0]
     _, r, done, _ = model.step(action)  # Model is now at child.
-
+    
+    if done:
+      self.action_priors[action] = 0
+      return r
+    
     # Base case
     if action not in self.children:
       # EXPANSION
@@ -42,9 +47,7 @@ class MCTSNode():
       self.action_visits[action] += 1
       return value
     
-    if done:
-      self.action_priors[action] = 0
-      return r
+    
 
     # Recursive case
     value = self.children[action].update_tree(model) + r
@@ -117,7 +120,7 @@ done = False
 mcts = MCTS()
 
 while not done:
-  action = mcts.action(1000, env)
+  action = mcts.action(600, env)
   print("Taking action: ", action)
   
   obs, reward, done, info = env.step(action)

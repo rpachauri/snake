@@ -19,7 +19,7 @@ class SnakeEnv(gym.Env):
   """
   # Dimension of the snake environment.
   M = 6
-  N = 12
+  N = 6
 
   action_space = len(Action)
   observation_space = np.array((4, M, N))
