@@ -24,9 +24,9 @@ class SnakeEnv(gym.Env):
   action_space = len(Action)
   observation_space = np.array((4, M, N))
 
-  HIT_WALL = -10
-  HIT_BODY = -10
-  CONSUMED_FRUIT = 10
+  HIT_WALL = -1
+  HIT_BODY = -1
+  CONSUMED_FRUIT = 1
   DEFAULT_REWARD = 0
 
 

@@ -21,7 +21,7 @@ class UCTNode():
     return self.action_total_values / (1 + self.action_visits)
 
   def U_value(self, current_num_visits):
-    return UCTNode.EXPLORATION_CONSTANT * np.sqrt(current_num_visits) * self.action_priors / (1 + self.action_visits)
+    return  np.sqrt(current_num_visits * UCTNode.EXPLORATION_CONSTANT) * self.action_priors / (1 + self.action_visits)
 
   def best_action(self, current_num_visits):
     '''Returns the best action based on each Q value and exploration value.
@@ -169,7 +169,7 @@ done = False
 uct = UCT()
 
 while not done:
-  action = uct.action(300, env)
+  action = uct.action(600, env)
   print("Taking action: ", action)
   
   obs, reward, done, info = env.step(action)
