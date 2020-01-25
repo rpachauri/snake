@@ -21,7 +21,7 @@ class UCTNode():
     return self.action_total_values / (1 + self.action_visits)
 
   def U_value(self, current_num_visits):
-    return  np.sqrt(current_num_visits * UCTNode.EXPLORATION_CONSTANT) * self.action_priors / (1 + self.action_visits)
+    return np.sqrt(current_num_visits * UCTNode.EXPLORATION_CONSTANT) * self.action_priors / (1 + self.action_visits)
 
   def best_action(self, current_num_visits):
     '''Returns the best action based on each Q value and exploration value.
@@ -30,11 +30,6 @@ class UCTNode():
       - current_num_visits is the number of times we have visited this node
     '''
     exploitation_exploration = self.Q_value() + self.U_value(current_num_visits)
-    #action_not_terminal = 1 * (self.action_priors != 0)
-    #print(exploitation_exploration)
-    #print("action_not_terminal:", action_not_terminal)
-    #print(np.multiply(exploitation_exploration, action_not_terminal))
-    #return np.argmax(np.multiply(exploitation_exploration, action_not_terminal))
     return np.argmax(exploitation_exploration)
 
   def update_tree(self, model, current_num_visits):
@@ -52,10 +47,6 @@ class UCTNode():
     '''
     # SELECTION
     action = self.best_action(current_num_visits)
-    current_action_value = self.action_total_values[action]
-    #print(action)
-    #assert current_action_value != UCTNode.WINNING_VALUE
-    #assert current_action_value != UCTNode.LOSING_VALUE
     _, r, done, _ = model.step(action)  # Model is now at child.
     self.action_visits[action] += 1
 
@@ -64,23 +55,24 @@ class UCTNode():
         self.action_total_values[action] = UCTNode.WINNING_VALUE
       else:
         self.action_total_values[action] = UCTNode.LOSING_VALUE
-      return r #self.action_total_values[action]
+      return r
 
     # Base case
     if action not in self.children:
       # EXPANSION
       self.children[action] = UCTNode()
+
+      # ROLLOUT
       value = r + self.children[action].rollout(model)
       self.action_total_values[action] += value
       return value
 
     # Recursive case
-    value = self.children[action].update_tree(model, self.action_visits[action]) + r
-
-    self.adjust_action_value(action, value)
+    value = r + self.children[action].update_tree(model, self.action_visits[action])
 
     # BACKUP
-    
+    self.adjust_action_value(action, value)
+
     return value
 
   def adjust_action_value(self, action, value):
@@ -178,4 +170,3 @@ while not done:
   env.render()
 
 print("Score:", int(score))
-
