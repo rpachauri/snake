@@ -50,7 +50,7 @@ score = 0
 done = False
 
 while not done:
-  action = monte_carlo(obs, env, 1000)
+  action = monte_carlo(obs, env, 600)
   print("Taking action: ", action)
   
   obs, reward, done, info = env.step(action)
