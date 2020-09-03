@@ -221,7 +221,7 @@ actor_critic.compile(
   loss=[tf.losses.SparseCategoricalCrossentropy(from_logits=True), 'mean_squared_error']
 )
 uct = UCT(actor_critic)
-train(uct, updates=1000)
+train(uct, updates=1)
 
 # Make the environment, replace this string with any
 # from the docs. (Some environments have dependencies)
@@ -235,7 +235,7 @@ score = 0
 done = False
 
 while not done:
-  action, _ = uct.action_value(600, env)
+  action, _ = uct.action_value(100, obs, env)
   print("Taking action: ", action)
   
   obs, reward, done, info = env.step(action)

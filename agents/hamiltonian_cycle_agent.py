@@ -68,7 +68,7 @@ while not done:
     break
   action = get_action(get_head(obs), M, N)
   obs, reward, done, info = env.step(action)
-  if reward == 50:
+  if reward > 0:
     fruit += 1
 
   print("Taking action: ", action)
