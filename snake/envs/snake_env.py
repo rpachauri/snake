@@ -18,7 +18,7 @@ class SnakeEnv(gym.Env):
   https://github.com/openai/gym/blob/master/gym/core.py.
   """
   # Dimension of the snake environment.
-  M = 20
+  M = 10
   N = 20
 
   action_space = len(Action)
