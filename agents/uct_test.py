@@ -2,9 +2,9 @@ import unittest
 import gym
 import snake
 import numpy as np
-import uct_2
+import uct
 
-class TestUCT2(unittest.TestCase):
+class TestUCT(unittest.TestCase):
 
   def setUp(self):
     self.env = gym.make('snake-v0')
@@ -16,14 +16,14 @@ class TestUCT2(unittest.TestCase):
     self.env.body = [(0,3), (1,3)]
     self.env.fruit = (0,2)
 
-    uct = uct_2.UCT()
-    uct._perform_rollouts(num_rollouts=10, env=self.env)
-    got_action = uct._select_action()
+    agent = uct.UCT()
+    agent._perform_rollouts(num_rollouts=10, env=self.env)
+    got_action = agent._select_action()
     self.assertEqual(got_action, 1)
 
   def test_best_action(self):
     # test UCTNode initialization
-    node = uct_2.UCTNode(num_actions=2)
+    node = uct.UCTNode(num_actions=2)
     expected_action_priors = np.array([1,1]) / 2
     self.assertIsNone(np.testing.assert_array_equal(node.action_priors, expected_action_priors))
 
@@ -36,105 +36,105 @@ class TestUCT2(unittest.TestCase):
     self.env.body = [(3,0), (2,0)]
     self.env.fruit = (3,3)
     # obscenely long access to a variable
-    wall_reward = uct_2.UCTNode.LOSING_VALUE
+    wall_reward = uct.UCTNode.LOSING_VALUE
 
     # perform one rollout
     # perform_rollouts should update action prior of left action to 0
-    uct = uct_2.UCT()
-    uct.root.action_priors = np.array([0, 1, 0, 0, 0], dtype=np.float32)
-    uct._perform_rollouts(num_rollouts=1, env=self.env)
+    agent = uct.UCT(num_actions=5)
+    agent.root.action_priors = np.array([0, 1, 0, 0, 0], dtype=np.float32)
+    agent._perform_rollouts(num_rollouts=1, env=self.env)
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_priors,
+      agent.root.action_priors,
       np.array([0, 1, 0, 0, 0], dtype=np.float32)
     ))
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_visits,
+      agent.root.action_visits,
       np.array([0, 1, 0, 0, 0], dtype=np.float32)
     ))
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_total_values,
+      agent.root.action_total_values,
       np.array([0, wall_reward, 0, 0, 0], dtype=np.float32)
     ))
       
     # perform a second rollout
-    uct.root.action_priors = np.array([1, 0, 0, 0, 0], dtype=np.float32)
-    uct._perform_rollouts(num_rollouts=1, env=self.env)
+    agent.root.action_priors = np.array([1, 0, 0, 0, 0], dtype=np.float32)
+    agent._perform_rollouts(num_rollouts=1, env=self.env)
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_priors,
+      agent.root.action_priors,
       np.array([1, 0, 0, 0, 0], dtype=np.float32)
     ))
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_visits,
+      agent.root.action_visits,
       np.array([1, 1, 0, 0, 0], dtype=np.float32)
     ))
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_total_values,
+      agent.root.action_total_values,
       np.array([wall_reward, wall_reward, 0, 0, 0], dtype=np.float32)
     ))
       
     # perform a third rollout
-    uct.root.action_priors = np.array([0, 0, 1, 0, 0], dtype=np.float32)
-    uct._perform_rollouts(num_rollouts=1, env=self.env)
+    agent.root.action_priors = np.array([0, 0, 1, 0, 0], dtype=np.float32)
+    agent._perform_rollouts(num_rollouts=1, env=self.env)
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_priors,
+      agent.root.action_priors,
       np.array([0, 0, 1, 0, 0], dtype=np.float32)
     ))
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_visits,
+      agent.root.action_visits,
       np.array([1, 1, 1, 0, 0], dtype=np.float32)
     ))
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_total_values,
+      agent.root.action_total_values,
       np.array([wall_reward, wall_reward, wall_reward, 0, 0], dtype=np.float32)
     ))
       
     # perform a fourth rollout
-    uct.root.action_priors = np.array([0, 0, 0, 0, 1], dtype=np.float32)
-    uct._perform_rollouts(num_rollouts=1, env=self.env)
+    agent.root.action_priors = np.array([0, 0, 0, 0, 1], dtype=np.float32)
+    agent._perform_rollouts(num_rollouts=1, env=self.env)
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_priors,
+      agent.root.action_priors,
       np.array([0, 0, 0, 0, 1], dtype=np.float32)
     ))
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_visits,
+      agent.root.action_visits,
       np.array([1, 1, 1, 0, 1], dtype=np.float32)
     ))
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_total_values,
+      agent.root.action_total_values,
       np.array([wall_reward, wall_reward, wall_reward, 0, wall_reward], dtype=np.float32)
     ))
       
     # perform a fifth rollout
-    uct.root.action_priors = np.array([0, 0, 0, 1, 0], dtype=np.float32)
-    uct._perform_rollouts(num_rollouts=1, env=self.env)
+    agent.root.action_priors = np.array([0, 0, 0, 1, 0], dtype=np.float32)
+    agent._perform_rollouts(num_rollouts=1, env=self.env)
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_priors,
+      agent.root.action_priors,
       np.array([0, 0, 0, 1, 0], dtype=np.float32)
     ))
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_visits,
+      agent.root.action_visits,
       np.array([1, 1, 1, 1, 1], dtype=np.float32)
     ))
     self.assertIsNone(np.testing.assert_array_equal(
-      np.delete(uct.root.action_total_values, 3),
+      np.delete(agent.root.action_total_values, 3),
       np.ones(4, dtype=np.float32) * wall_reward
     ))
     # the action_total_value for this action could be 0 or wall_reward
 
     # perform more rollouts
     additional_rollouts = 100
-    uct._perform_rollouts(num_rollouts=additional_rollouts, env=self.env)
+    agent._perform_rollouts(num_rollouts=additional_rollouts, env=self.env)
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_priors,
+      agent.root.action_priors,
       np.array([0, 0, 0, 1, 0], dtype=np.float32)
     ))
     self.assertIsNone(np.testing.assert_array_equal(
-      np.delete(uct.root.action_total_values, 3),
+      np.delete(agent.root.action_total_values, 3),
       np.ones(4, dtype=np.float32) * wall_reward
     ))
-    self.assertEqual(uct.root_num_visits, 6 + additional_rollouts)
+    self.assertEqual(agent.root_num_visits, 6 + additional_rollouts)
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_visits,
+      agent.root.action_visits,
       np.array([1, 1, 1, 1 + additional_rollouts, 1], dtype=np.float32)
     ))
 
@@ -144,11 +144,11 @@ class TestUCT2(unittest.TestCase):
     self.env.body = [(3,3), (2,3), (2,2), (3,2), (3,1)]
     self.env.fruit = (0,0)
 
-    uct = uct_2.UCT()
-    uct._perform_rollouts(num_rollouts=100, env=self.env)
+    agent = uct.UCT(num_actions=5)
+    agent._perform_rollouts(num_rollouts=100, env=self.env)
     self.assertIsNone(np.testing.assert_array_equal(
-      uct.root.action_total_values,
-      np.ones(5, dtype=np.float32) * uct_2.UCTNode.LOSING_VALUE
+      agent.root.action_total_values,
+      np.ones(5, dtype=np.float32) * uct.UCTNode.LOSING_VALUE
     ))
 
   def test_greedy_losing(self):
@@ -157,25 +157,25 @@ class TestUCT2(unittest.TestCase):
     self.env.body = [(2,3), (2,2), (3,2), (3,1)]
     self.env.fruit = (3,3)
 
-    uct = uct_2.UCT()
+    agent = uct.UCT(num_actions=5)
     # perform a large number of rollouts
     # down should show that it'll lead to a losing state
     num_rollouts = 1000
-    uct._perform_rollouts(num_rollouts=num_rollouts, env=self.env)
+    agent._perform_rollouts(num_rollouts=num_rollouts, env=self.env)
     self.assertIsNone(np.testing.assert_array_equal(
-      np.delete(uct.root.action_total_values, 0),
-      np.ones(4, dtype=np.float32) * uct_2.UCTNode.LOSING_VALUE
+      np.delete(agent.root.action_total_values, 0),
+      np.ones(4, dtype=np.float32) * uct.UCTNode.LOSING_VALUE
     ))
 
   def test_adjust_action(self):
     self.env.body = [(2,3), (2,2), (2,1), (3,1), (3,0)]
     self.env.fruit = (3,3)
 
-    uct = uct_2.UCT()
+    agent = uct.UCT()
     # perform a large number of rollouts
     # down should show that it'll lead to a losing state
     num_rollouts = 1000
-    uct._perform_rollouts(num_rollouts=num_rollouts, env=self.env)
+    agent._perform_rollouts(num_rollouts=num_rollouts, env=self.env)
     #print(uct.root.children)
     #print(uct.root.children[2].children[1].action_total_values)
     #print(uct.root.children[2].children[1].action_visits)
@@ -183,5 +183,7 @@ class TestUCT2(unittest.TestCase):
     #print(uct.root.action_visits)
 
 
+# If you want to run this test, make sure to comment out the bottom of uct.py,
+# because that will play a game when we import the file.
 if __name__ == '__main__':
   unittest.main()

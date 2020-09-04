@@ -11,7 +11,7 @@ class UCTNode():
 
   EXPLORATION_CONSTANT = 10
 
-  def __init__(self, num_actions=5):
+  def __init__(self, num_actions=4):
     self.children = {}  # dictionary of moves to UCTNodes
     self.action_priors = np.ones(num_actions, dtype=np.float32) / num_actions
     self.action_total_values = np.zeros(num_actions, dtype=np.float32)
@@ -100,8 +100,8 @@ class UCT():
   '''
   '''
 
-  def __init__(self):
-    self.root = UCTNode()
+  def __init__(self, num_actions=4):
+    self.root = UCTNode(num_actions)
     self.root_num_visits = 1  # number of times we've visited the root node
 
   def _perform_rollouts(self, num_rollouts, env):
@@ -110,8 +110,8 @@ class UCT():
       self.root_num_visits += 1
     # Select the action that had the most visits.
     # action_values = np.divide(self.root.action_total_values, self.root.action_visits)
-    print("action_total_values:", self.root.action_total_values)
-    print("action_visits:", self.root.action_visits)
+    # print("action_total_values:", self.root.action_total_values)
+    # print("action_visits:", self.root.action_visits)
     #assert self.root_num_visits - 1 == np.sum(self.root.action_visits)
 
   def _select_action(self):
@@ -121,7 +121,7 @@ class UCT():
 
     # Move this tree to the state resulting from that action.
     self.root_num_visits = self.root.action_visits[action]
-    self.root = self.root.children[action] if action in self.root.children else UCTNode()
+    self.root = self.root.children[action] if action in self.root.children else UCTNode(num_actions)
     #print("type(action):", type(action))
     return action
 

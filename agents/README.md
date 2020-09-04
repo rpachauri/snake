@@ -50,18 +50,6 @@ Run with:
 
 Note that depending on your environment, you'll have to change EXPLORATION_CONSTANT based on the reward function.
 
-## Alpha Snake
-
-This is the single-player version of the Alpha Zero algorithm.
-
-Recall that rollouts play until the end of a game and we use the result of that rollout as an estimate for the action value. However, this can be incredibly expensive in long-lasting games and although these are unbiased estimates, they have high variance. One approach to this is to come up with our own estimate for a *state-value* at a leaf node instead of performing a rollout to estimate the action-value. The reason for this is that at each leaf node, we don't perform a rollout and rather than come up with our own estimate for each action-value, it'd be more efficient to just estimate the value of the state. This is known as "estimating the state-value function" and we can do this with a neural network.
-
-Run with:
-
-    $ python alpha_snake.py
-
-This agent has to perform some training to prepare its estimate of the state-value function.
-
 # Summary
 
-This was a fun project to understand RL algorithms. Starting with Monte Carlo, each algorithm builds upon the previous one, so what you see here is a step-by-step process towards building Alpha Snake. The agents may not be optimal but hopefully you should be able to see some sort of progression in ability (each agent should seem smarter than the one before it).
+This was a fun project to understand RL algorithms. Starting with Monte Carlo, each algorithm builds upon the previous one. The agents may not be optimal but hopefully you should be able to see some sort of progression in ability (each agent should seem smarter than the one before it).
