@@ -68,7 +68,7 @@ class SnakeEnv(gym.Env):
       self.done = True
       return self._get_observation(), SnakeEnv.HIT_BODY, self.done, None
 
-    # move the head.
+    # Move the head.
     self.body.insert(0, next_head)
 
     # Consumed fruit.
@@ -194,7 +194,7 @@ class SnakeEnv(gym.Env):
       Returns:
         An MxN tensor with a 1 placed at the location of the fruit.
     """
-    # TODO: create a set of all available locations and choose from that set.
+    # create a set of all available locations and choose from that set.
     # https://stackoverflow.com/questions/15837729/random-choice-from-set-python
     available_locs = set()
     # add all locations
