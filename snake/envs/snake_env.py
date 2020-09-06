@@ -26,7 +26,7 @@ class SnakeEnv(gym.Env):
 
   HIT_WALL = -1
   HIT_BODY = -1
-  CONSUMED_FRUIT = 1
+  CONSUMED_FRUIT = 10
   DEFAULT_REWARD = 0
 
 
