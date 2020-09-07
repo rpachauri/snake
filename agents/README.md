@@ -50,6 +50,16 @@ Run with:
 
 Note that depending on your environment, you'll have to change EXPLORATION_CONSTANT based on the reward function.
 
+## DQN
+
+I tried using the DQN implementation provided by [Machine Learning with Phil](https://www.youtube.com/watch?v=SMZfgeHFFcA). I first verified that the DQN worked with Lunar Lander (as it does in the video) and then adapted it slightly for SnakeEnv. I realized that the snake-v0 observation space might be too large (4, M, N) so I made snake-v1 with an observation space of (10,) - an idea I found in this article: [How to teach AI to play Games: Deep Reinforcement Learning](https://towardsdatascience.com/how-to-teach-an-ai-to-play-games-deep-reinforcement-learning-28f9b920440a). Unfortunately, the results are still not stable even after some hyperparameter tuning.
+
+Run with:
+
+    $ python dqn.py
+
+Although I wasn't able to get better results with snake-v1, I'm glad I condensed the observation space because it contributed to a significant speed-up in evaluation.
+
 # Summary
 
 This was a fun project to understand RL algorithms. Starting with Monte Carlo, each algorithm builds upon the previous one. The agents may not be optimal but hopefully you should be able to see some sort of progression in ability (each agent should seem smarter than the one before it).

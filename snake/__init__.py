@@ -4,3 +4,8 @@ register(
     id='snake-v0',
     entry_point='snake.envs:SnakeEnv',
 )
+
+register(
+    id='snake-v1',
+    entry_point='snake.envs:SnakeEnvV1',
+)

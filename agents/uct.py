@@ -101,6 +101,7 @@ class UCT():
   '''
 
   def __init__(self, num_actions=4):
+    self.num_actions = num_actions
     self.root = UCTNode(num_actions)
     self.root_num_visits = 1  # number of times we've visited the root node
 
@@ -121,7 +122,7 @@ class UCT():
 
     # Move this tree to the state resulting from that action.
     self.root_num_visits = self.root.action_visits[action]
-    self.root = self.root.children[action] if action in self.root.children else UCTNode(num_actions)
+    self.root = self.root.children[action] if action in self.root.children else UCTNode(self.num_actions)
     #print("type(action):", type(action))
     return action
 
@@ -149,7 +150,7 @@ class UCT():
 
 # Make the environment, replace this string with any
 # from the docs. (Some environments have dependencies)
-env = gym.make('snake-v0')
+env = gym.make('snake-v1')
 
 # Reset the environment to default beginning
 # Default observation variable
