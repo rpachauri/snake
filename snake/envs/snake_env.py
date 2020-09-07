@@ -1,16 +1,15 @@
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
-from enum import Enum
+from enum import IntEnum
 import random
 import numpy as np
 
-class Action(Enum):
+class Action(IntEnum):
     up = 0
     left = 1
     down = 2
     right = 3
-    nothing = 4
 
 class SnakeEnv(gym.Env):
   """Implements the gym.Env interface.
@@ -59,12 +58,12 @@ class SnakeEnv(gym.Env):
     self.body = self.body[:-1]
 
     # Hit wall.
-    if next_head[0] < 0 or next_head[0] >= SnakeEnv.M or next_head[1] < 0 or next_head[1] >= SnakeEnv.N:
+    if self.hit_wall(next_head):
       self.done = True
       return self._get_observation(), SnakeEnv.HIT_WALL, self.done, None
     
     # Hit body.
-    if next_head in self.body:
+    if self.hit_body(next_head):
       self.done = True
       return self._get_observation(), SnakeEnv.HIT_BODY, self.done, None
 
@@ -88,6 +87,12 @@ class SnakeEnv(gym.Env):
 
     # Simply moved.
     return self._get_observation(), SnakeEnv.DEFAULT_REWARD, self.done, None
+
+  def hit_wall(self, next_head):
+    return next_head[0] < 0 or next_head[0] >= SnakeEnv.M or next_head[1] < 0 or next_head[1] >= SnakeEnv.N
+
+  def hit_body(self, next_head):
+    return next_head in self.body
 
   def has_won(self):
     """ Returns true if this env is in a state that would be considered "won"
@@ -128,9 +133,6 @@ class SnakeEnv(gym.Env):
       Returns:
         an action that will work with Snake's game mechanics (either action or current_direction).
     """
-    # A non-action results in a forward-action.
-    if action == Action.nothing:
-      return current_direction
     # An action in the opposite direction that the snake faces results in a forward-action.
     if ((action == Action.up and current_direction == Action.down) or
         (action == Action.left and current_direction == Action.right) or
