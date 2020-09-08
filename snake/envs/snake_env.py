@@ -1,6 +1,4 @@
 import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
 from enum import IntEnum
 import random
 import numpy as np
@@ -25,7 +23,7 @@ class SnakeEnv(gym.Env):
 
   HIT_WALL = -1
   HIT_BODY = -1
-  CONSUMED_FRUIT = 10
+  CONSUMED_FRUIT = 1
   DEFAULT_REWARD = 0
 
 

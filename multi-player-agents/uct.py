@@ -9,7 +9,7 @@ class UCTNode():
   WINNING_VALUE = 10000000
   LOSING_VALUE = -10000000
 
-  EXPLORATION_CONSTANT = 10
+  EXPLORATION_CONSTANT = 1
 
   def __init__(self, num_actions=4):
     self.children = {}  # dictionary of moves to UCTNodes
@@ -99,7 +99,6 @@ class UCTNode():
 class UCT():
   '''
   '''
-
   def __init__(self, num_actions=4):
     self.num_actions = num_actions
     self.root = UCTNode(num_actions)
@@ -109,13 +108,12 @@ class UCT():
     for _ in range(num_rollouts):
       self.root.update_tree(copy.deepcopy(env), self.root_num_visits)
       self.root_num_visits += 1
-    # Select the action that had the most visits.
-    # action_values = np.divide(self.root.action_total_values, self.root.action_visits)
     # print("action_total_values:", self.root.action_total_values)
     # print("action_visits:", self.root.action_visits)
-    #assert self.root_num_visits - 1 == np.sum(self.root.action_visits)
+    # assert self.root_num_visits - 1 == np.sum(self.root.action_visits)
 
   def _select_action(self):
+    # Select the action that had the most visits.
     #print("exploitation_exploration:", self.root.Q_value() + self.root.U_value(self.root_num_visits))
     #print("self.root.action_visits:", self.root.action_visits)
     action = np.argmax(self.root.action_visits)
@@ -150,7 +148,7 @@ class UCT():
 
 # Make the environment, replace this string with any
 # from the docs. (Some environments have dependencies)
-env = gym.make('snake-v1')
+env = gym.make('multiplayer-snake-v0')
 
 # Reset the environment to default beginning
 # Default observation variable
