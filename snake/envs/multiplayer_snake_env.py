@@ -45,12 +45,12 @@ class MultiplayerSnakeEnv(gym.Env):
     # TODO: iterate through list of snakes in random order
     for i in range(len(actions)):
       snake = self.snakes[i]
-      rewards.append(self._step(actions[i], snake))
+      rewards.append(self._step(actions[i], snake, i))
       dones.append(snake.done)
     return self.get_observation(), rewards, dones, None
 
 
-  def _step(self, action, snake):
+  def _step(self, action, snake, snake_index):
     """Accepts an action and moves the snake.
 
       If a snake dies, its body remains.
@@ -97,7 +97,7 @@ class MultiplayerSnakeEnv(gym.Env):
       snake.body.append(tail)
       
       # game is over.
-      if self.has_won():
+      if self.has_won(snake_index):
         snake.done = True
         return SnakeEnv.CONSUMED_FRUIT
 
@@ -121,7 +121,9 @@ class MultiplayerSnakeEnv(gym.Env):
     return False
 
   def has_won(self, snake_index):
-    """ Returns true if this env is in a state that would be considered "won"
+    """Returns true if the given snake has "won"
+
+    Requires: all snakes must be done; otherwise returns false
 
     Definition of "won": this snake is the only snake not done
      - the environment may not be "done" but this is a sufficient definition of "won"
