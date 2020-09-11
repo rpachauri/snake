@@ -70,8 +70,17 @@ class TestSingleAgentMultiplayerSnakeEnv(unittest.TestCase):
     self.assertEqual(self.env.fruit, (0,0))
 
   def test_has_won(self):
-    # since there only exists a single snake, the snake should already have "won"
-    self.assertTrue(self.env.has_won(0))
+    snake = Snake(body=[(0,3), (1,3)])
+    snake.direction = Action.right
+    self.env.snakes = [snake]
+    self.env.fruit = (0,2)
+
+    # Snake is currently facing right and we tell it to move up.
+    _, rewards, dones, _ = self.env.step([0])
+
+    # since there's only 1 agent in the env, the requirement for winning is for
+    # the snake to cover the grid.
+    self.assertFalse(self.env.has_won(0))
 
 
 if __name__ == '__main__':

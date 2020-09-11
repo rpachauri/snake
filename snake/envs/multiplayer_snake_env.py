@@ -11,6 +11,16 @@ class Snake():
     self.body = body
     self.direction = random.choice(list(Action))
     self.done = False
+    # died_number is the order in which the snake died.
+    # it should only be accessed when self.done = True.
+    # when self.done = True, 1 <= self.died_number <= num_agents
+    self.died_number = 0
+
+  def check_rep(self):
+    if not done:
+      assert self.died_number == 0
+    else:
+      assert 1 <= self.died_number and self.died_number <= MultiplayerSnakeEnv.num_agents
 
 class MultiplayerSnakeEnv(gym.Env):
   """Implements the gym.Env interface.
@@ -20,8 +30,7 @@ class MultiplayerSnakeEnv(gym.Env):
   # Dimension of the snake environment.
   action_space = len(Action)
   observation_space = 10
-  num_agents = 1
-
+  num_agents = 10
 
   def __init__(self):
     # self.done = True
@@ -42,7 +51,7 @@ class MultiplayerSnakeEnv(gym.Env):
     """
     rewards = []
     dones = []
-    # TODO: iterate through list of snakes in random order
+
     for i in range(len(actions)):
       snake = self.snakes[i]
       rewards.append(self._step(actions[i], snake, i))
@@ -79,12 +88,12 @@ class MultiplayerSnakeEnv(gym.Env):
 
     # Hit wall.
     if self.hit_wall(next_head):
-      snake.done = True
+      self.kill_snake(snake)
       return SnakeEnv.HIT_WALL
     
     # Hit body.
     if self.hit_body(next_head):
-      snake.done = True
+      self.kill_snake(snake)
       return SnakeEnv.HIT_BODY
 
     # Move the head.
@@ -95,10 +104,10 @@ class MultiplayerSnakeEnv(gym.Env):
       self.fruit = None
       # extend the snake's length by adding the location where the tail used to be.
       snake.body.append(tail)
-      
-      # game is over.
+
+      # game is over
       if self.has_won(snake_index):
-        snake.done = True
+        self.kill_snake(snake)
         return SnakeEnv.CONSUMED_FRUIT
 
       # keep playing.
@@ -108,6 +117,10 @@ class MultiplayerSnakeEnv(gym.Env):
     # Simply moved.
     return SnakeEnv.DEFAULT_REWARD
 
+  def kill_snake(self, snake):
+    self.num_agents_dead += 1
+    snake.done = True
+    snake.died_number = self.num_agents_dead
 
   def hit_wall(self, next_head):
     return next_head[0] < 0 or next_head[0] >= SnakeEnv.M or next_head[1] < 0 or next_head[1] >= SnakeEnv.N
@@ -121,22 +134,22 @@ class MultiplayerSnakeEnv(gym.Env):
     return False
 
   def has_won(self, snake_index):
-    """Returns true if the given snake has "won"
+    """Returns true if the given snake has "won". If the snake has not yet died, it has not won.
 
-    Requires: all snakes must be done; otherwise returns false
-
-    Definition of "won": this snake is the only snake not done
-     - the environment may not be "done" but this is a sufficient definition of "won"
+    Definition of "won": this snake is the last to die.
     """
     snake = self.snakes[snake_index]
-    if snake.done:
+
+    # if there is only 1 agent, return true if it covers the entire grid.
+    if MultiplayerSnakeEnv.num_agents == 1:
+      return len(snake.body) == SnakeEnv.M * SnakeEnv.N
+
+    # if there are multiple agents, return true if it is the last agent to die.
+    if not snake.done:
       return False
-    for other_snake in self.snakes:
-      # If there exists another snake that is still playing
-      if snake != other_snake and not other_snake.done:
-        return False
-    # This snake is not done. All other snakes are done.
-    return True
+
+    # return true if this snake is the last to die.
+    return snake.died_number == MultiplayerSnakeEnv.num_agents
 
   def _adjust_action(self, action, current_direction):
     """The action the user makes may not be compatible with game mechanics,
@@ -185,6 +198,7 @@ class MultiplayerSnakeEnv(gym.Env):
     # locations are represented by tuples of length 2.
     # head is anywhere on the grid and not next to a wall.
     # self.done = False
+    self.num_agents_dead = 0
 
     available_locs = set()
     # add all locations not next to a wall.
