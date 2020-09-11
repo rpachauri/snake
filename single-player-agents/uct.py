@@ -146,26 +146,26 @@ class UCT():
 
 
 
-# Make the environment, replace this string with any
-# from the docs. (Some environments have dependencies)
-env = gym.make('multiplayer-snake-v0')
+# # Make the environment, replace this string with any
+# # from the docs. (Some environments have dependencies)
+# env = gym.make('multiplayer-snake-v0')
 
-# Reset the environment to default beginning
-# Default observation variable
-obs = env.reset()
-env.render()
-score = 0
-done = False
+# # Reset the environment to default beginning
+# # Default observation variable
+# obs = env.reset()
+# env.render()
+# score = 0
+# done = False
 
-uct = UCT()
+# uct = UCT()
 
-while not done:
-  action = uct.action(600, env)
-  print("Taking action: ", action)
+# while not done:
+#   action = uct.action(600, env)
+#   print("Taking action: ", action)
   
-  obs, reward, done, info = env.step(action)
-  score += reward
-  # Render the env
-  env.render()
+#   obs, reward, done, info = env.step(action)
+#   score += reward
+#   # Render the env
+#   env.render()
 
-print("Score:", int(score))
+# print("Score:", int(score))
