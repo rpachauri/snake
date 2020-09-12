@@ -30,7 +30,7 @@ class MultiplayerSnakeEnv(gym.Env):
   # Dimension of the snake environment.
   action_space = len(Action)
   observation_space = 10
-  num_agents = 10
+  num_agents = 4
 
   def __init__(self):
     # self.done = True
@@ -319,8 +319,6 @@ class MultiplayerSnakeEnv(gym.Env):
     Args:
       mode (str): Supported modes: {'human'}
     """
-    # body, fruit = self._get_locations_as_2D_arrays()
-
     horizontal_wall = self._create_horizontal_wall()
     print(horizontal_wall)
     
@@ -339,9 +337,7 @@ class MultiplayerSnakeEnv(gym.Env):
     # set the location of each snake's body.
     directions = {Action.up: "^", Action.left: "<", Action.right: ">", Action.down: "v"}
 
-    # print(self.snakes)
     for snake in self.snakes:
-      # print(snake)
       if len(snake.body) > 0:
         head = snake.body[0]
         char_locs[head[0]][head[1]] = directions[snake.direction]
@@ -353,13 +349,6 @@ class MultiplayerSnakeEnv(gym.Env):
     for m in range(SnakeEnv.M):
       line = "|"
       for n in range(SnakeEnv.N):
-        # loc = " "
-        # if fruit[m][n] == 1:
-        #   loc = "x"
-        # if body[m][n] == 1:
-        #   loc = "o"
-        # if len(self.snake.body) > 0 and self.snake.body[0] == (m, n):
-        #   loc = directions[self.snake.direction]
         line += char_locs[m][n]
       print(line + "|")
     print(horizontal_wall)

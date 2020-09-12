@@ -15,15 +15,15 @@ class SnakeEnv(gym.Env):
   https://github.com/openai/gym/blob/master/gym/core.py.
   """
   # Dimension of the snake environment.
-  M = 30
-  N = 100
+  M = 20
+  N = 20
 
   action_space = len(Action)
   observation_space = np.array((4, M, N))
 
   HIT_WALL = -1
   HIT_BODY = -1
-  CONSUMED_FRUIT = 1
+  CONSUMED_FRUIT = 10
   DEFAULT_REWARD = 0
 
 
