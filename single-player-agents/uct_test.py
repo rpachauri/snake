@@ -25,7 +25,7 @@ class TestUCT(unittest.TestCase):
     # print("len(agent.root.children):", len(agent.root.children))
     # print(agent.root.best_action(agent.root_num_visits))
 
-  def test_facing_up_at_top_right(self):
+  def test_facing_up_at_top_right_after_multiple_rollouts(self):
     self.env.body = [(0,3), (1,3)]
     self.env.fruit = (0,2)
 

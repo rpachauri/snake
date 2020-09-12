@@ -108,20 +108,14 @@ class UCT():
     for _ in range(num_rollouts):
       self.root.update_tree(copy.deepcopy(env), self.root_num_visits)
       self.root_num_visits += 1
-    # print("action_total_values:", self.root.action_total_values)
-    # print("action_visits:", self.root.action_visits)
-    # assert self.root_num_visits - 1 == np.sum(self.root.action_visits)
 
   def _select_action(self):
     # Select the action that had the most visits.
-    #print("exploitation_exploration:", self.root.Q_value() + self.root.U_value(self.root_num_visits))
-    #print("self.root.action_visits:", self.root.action_visits)
     action = np.argmax(self.root.action_visits)
 
     # Move this tree to the state resulting from that action.
     self.root_num_visits = self.root.action_visits[action]
     self.root = self.root.children[action] if action in self.root.children else UCTNode(self.num_actions)
-    #print("type(action):", type(action))
     return action
 
   def action(self, num_rollouts, env):
@@ -146,26 +140,26 @@ class UCT():
 
 
 
-# # Make the environment, replace this string with any
-# # from the docs. (Some environments have dependencies)
-# env = gym.make('multiplayer-snake-v0')
+# Make the environment, replace this string with any
+# from the docs. (Some environments have dependencies)
+env = gym.make('snake-v0')
 
-# # Reset the environment to default beginning
-# # Default observation variable
-# obs = env.reset()
-# env.render()
-# score = 0
-# done = False
+# Reset the environment to default beginning
+# Default observation variable
+obs = env.reset()
+env.render()
+score = 0
+done = False
 
-# uct = UCT()
+uct = UCT()
 
-# while not done:
-#   action = uct.action(600, env)
-#   print("Taking action: ", action)
+while not done:
+  action = uct.action(100, env)
+  print("Taking action: ", action)
   
-#   obs, reward, done, info = env.step(action)
-#   score += reward
-#   # Render the env
-#   env.render()
+  obs, reward, done, info = env.step(action)
+  score += reward
+  # Render the env
+  env.render()
 
-# print("Score:", int(score))
+print("Score:", int(score))
