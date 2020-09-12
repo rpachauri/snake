@@ -5,32 +5,40 @@ np.seterr(divide='ignore', invalid='ignore')
 import copy
 import random
 
+from snake.envs.multiplayer_snake_env import MultiplayerSnakeEnv
+
 class UCTNode():
   WINNING_VALUE = 10000000
   LOSING_VALUE = -10000000
 
   EXPLORATION_CONSTANT = 1
 
-  def __init__(self, num_actions=4):
+  def __init__(self, num_agents, num_actions=4):
     self.children = {}  # dictionary of moves to UCTNodes
-    self.action_priors = np.ones(num_actions, dtype=np.float32) / num_actions
-    self.action_total_values = np.zeros(num_actions, dtype=np.float32)
-    self.action_visits = np.zeros(num_actions, dtype=np.float32)
+    self.action_priors = np.ones((num_agents, num_actions), dtype=np.float32) / num_actions
+    self.action_total_values = np.zeros((num_agents, num_actions), dtype=np.float32)
+    self.action_visits = np.zeros((num_agents, num_actions), dtype=np.float32)
 
   def Q_value(self):
+    # ndarrays allow for elementwise multiplication: https://stackoverflow.com/a/40035266
+    # assuming that property extends to elementwise division
     return self.action_total_values / (1 + self.action_visits)
 
   def U_value(self, current_num_visits):
-    return np.sqrt(current_num_visits * UCTNode.EXPLORATION_CONSTANT) * self.action_priors / (1 + self.action_visits)
+    # ndarrays allow for elementwise multiplication: https://stackoverflow.com/a/40035266
+    # assuming that property extends to elementwise division
+    u_value_factor = np.sqrt(current_num_visits * UCTNode.EXPLORATION_CONSTANT)
+    return u_value_factor * self.action_priors / (1 + self.action_visits)
 
-  def best_action(self, current_num_visits):
+  def best_actions(self, current_num_visits):
     '''Returns the best action based on each Q value and exploration value.
     
       Args:
       - current_num_visits is the number of times we have visited this node
     '''
     exploitation_exploration = self.Q_value() + self.U_value(current_num_visits)
-    return np.argmax(exploitation_exploration)
+    # return the best action for each agent
+    return np.argmax(exploitation_exploration, axis=1)
 
   def update_tree(self, model, current_num_visits):
     '''Performs UCT for this node and all children of this node.
@@ -46,85 +54,138 @@ class UCTNode():
        - the value of the new leaf node
     '''
     # SELECTION
-    action = self.best_action(current_num_visits)
-    _, r, done, _ = model.step(action)  # Model is now at child.
-    self.action_visits[action] += 1
+    actions = self.best_actions(current_num_visits)
+    _, rewards, dones, _ = model.step(actions)  # Model is now at child.
 
-    if done:
-      if model.has_won():
-        self.action_total_values[action] = UCTNode.WINNING_VALUE
+
+    assert len(actions) == len(rewards)
+    assert len(actions) == len(dones)
+
+    num_agents = len(actions)
+
+    for agent in range(num_agents):
+      action = actions[agent]
+      self.action_visits[agent, action] += 1
+
+
+    # all_done should be set to True if all agents are done
+    all_done = True
+    for agent in range(num_agents):
+
+      if dones[agent]:
+        action = actions[agent]
+        # this line may cause problems because has_won() only gets called when dones[agent]
+        # is true but dones[agent] must be false for model.has_won() to ever be true
+        if model.has_won(agent): 
+          self.action_total_values[agent, action] = UCTNode.WINNING_VALUE
+        else:
+          self.action_total_values[agent, action] = UCTNode.LOSING_VALUE
       else:
-        self.action_total_values[action] = UCTNode.LOSING_VALUE
-      return r
+        all_done = False
+
+    if all_done:
+      return rewards
 
     # Base case
-    if action not in self.children:
+    if tuple(actions.tolist()) not in self.children:
       # EXPANSION
-      self.children[action] = UCTNode()
+      self.children[tuple(actions.tolist())] = UCTNode(num_agents)
 
       # ROLLOUT
-      value = r + self.children[action].rollout(model)
-      self.action_total_values[action] += value
-      return value
+      values = self.children[tuple(actions.tolist())].rollout(model, num_agents)
+      for agent in range(num_agents): # len(values) == num_agents must be true
+        action = actions[agent]
+        values[agent] += rewards[agent]
+        self.action_total_values[agent, action] += values[agent]
+      return values
 
     # Recursive case
-    value = r + self.children[action].update_tree(model, self.action_visits[action])
+    action_visits = []
+    for agent in range(num_agents):
+      action = actions[agent]
+      action_visits.append(self.action_visits[agent, action])
+    action_visits = np.array(action_visits).reshape((num_agents, 1))
+
+    values = self.children[tuple(actions.tolist())].update_tree(model, action_visits)
+    for agent in range(num_agents):
+      values[agent] += rewards[agent]
+    # value = r + self.children[actions].update_tree(model, self.action_visits[action])
 
     # BACKUP
-    self.adjust_action_value(action, value)
+    self.adjust_action_values(actions, values)
 
-    return value
+    return values
 
-  def adjust_action_value(self, action, value):
-    child = self.children[action]
+  def adjust_action_values(self, actions, values):
+    child = self.children[tuple(actions.tolist())]
     # child's actions all lead to losing/winning states
-    if np.all(np.logical_or(
-        child.action_total_values == UCTNode.WINNING_VALUE,
-        child.action_total_values == UCTNode.LOSING_VALUE)):
-      self.action_total_values[action] = np.max(child.action_total_values)
-    elif (self.action_total_values[action] != UCTNode.WINNING_VALUE and
-        self.action_total_values[action] != UCTNode.LOSING_VALUE):
-      self.action_total_values[action] += value
+    for agent in range(len(actions)):
+      action = actions[agent]
+      if np.all(np.logical_or(
+          child.action_total_values[agent] == UCTNode.WINNING_VALUE,
+          child.action_total_values[agent] == UCTNode.LOSING_VALUE)):
+        # if all actions for the agent are winning or losing, set the action-value for the agent to be
+        # the largest action-value.
+        self.action_total_values[agent, action] = np.max(child.action_total_values[agent])
+      elif (self.action_total_values[agent, action] != UCTNode.WINNING_VALUE and
+          self.action_total_values[agent, action] != UCTNode.LOSING_VALUE):
+        # if the action for the agent isn't already completely winning/losing, add the value estimate.
+        self.action_total_values[agent, action] += values[agent]
 
-  def rollout(self, model):
-    value = 0
+  def rollout(self, model, num_agents):
+    values = [0 for agent in range(num_agents)]
     done = False
     while not done:
-      action = random.randint(0, model.action_space - 1)
-      _, r, done, _ = model.step(action)
-      value += r
-    return value
+      actions = np.random.randint(0, model.action_space, num_agents)
+      _, rewards, dones, _ = model.step(actions)
+
+      # default done to True
+      done = True
+      # if there is a single agent that is not done, the model is not done
+      for d in dones:
+        if not d:
+          done = False
+
+      for agent in range(num_agents):
+        values[agent] += rewards[agent]
+    return values
 
 
 class UCT():
   '''
   '''
-  def __init__(self, num_actions=4):
+  def __init__(self, num_agents, num_actions=4):
+    self.num_agents = num_agents
     self.num_actions = num_actions
-    self.root = UCTNode(num_actions)
-    self.root_num_visits = 1  # number of times we've visited the root node
+    self.root = UCTNode(num_agents)
+    self.root_num_visits = np.ones((num_agents, 1)) # number of times we've visited the root node
+    self.check_rep()
 
   def _perform_rollouts(self, num_rollouts, env):
     for _ in range(num_rollouts):
       self.root.update_tree(copy.deepcopy(env), self.root_num_visits)
-      self.root_num_visits += 1
-    # print("action_total_values:", self.root.action_total_values)
-    # print("action_visits:", self.root.action_visits)
-    # assert self.root_num_visits - 1 == np.sum(self.root.action_visits)
+      for i in range(len(self.root_num_visits)):
+        self.root_num_visits[i] += 1
 
-  def _select_action(self):
+  def _select_actions(self):
     # Select the action that had the most visits.
-    #print("exploitation_exploration:", self.root.Q_value() + self.root.U_value(self.root_num_visits))
-    #print("self.root.action_visits:", self.root.action_visits)
-    action = np.argmax(self.root.action_visits)
+    actions = np.argmax(self.root.action_visits, axis=1)
+
+    assert len(actions) == self.num_agents
 
     # Move this tree to the state resulting from that action.
-    self.root_num_visits = self.root.action_visits[action]
-    self.root = self.root.children[action] if action in self.root.children else UCTNode(self.num_actions)
-    #print("type(action):", type(action))
-    return action
+    num_visits = []
+    for agent in range(self.num_agents):
+      action = actions[agent]
+      num_visits.append(self.root.action_visits[agent, action])
+    self.root_num_visits = np.array(num_visits).reshape(self.root_num_visits.shape)
+    self.root = self.root.children[tuple(actions.tolist())] if tuple(actions.tolist()) in self.root.children else UCTNode(self.num_agents, self.num_actions)
 
-  def action(self, num_rollouts, env):
+    self.check_rep()
+    
+    return actions
+
+  def actions(self, num_rollouts, env):
     '''Returns an action.
       
       Args:
@@ -142,30 +203,49 @@ class UCT():
         the best action after performing num_rollouts simulations
     '''
     self._perform_rollouts(num_rollouts, env)
-    return self._select_action()
+    return self._select_actions()
+
+  def check_rep(self):
+    assert self.root_num_visits.shape == (self.num_agents, 1)
 
 
 
 # Make the environment, replace this string with any
 # from the docs. (Some environments have dependencies)
 env = gym.make('multiplayer-snake-v0')
+num_agents = MultiplayerSnakeEnv.num_agents
+print("num_agents:", num_agents)
 
 # Reset the environment to default beginning
 # Default observation variable
-obs = env.reset()
+env.reset()
 env.render()
-score = 0
+scores = [0 for agent in range(num_agents)]
 done = False
 
-uct = UCT()
+uct = UCT(num_agents)
 
 while not done:
-  action = uct.action(600, env)
-  print("Taking action: ", action)
+  actions = uct.actions(100, env)
+  print("Taking actions: ", actions)
   
-  obs, reward, done, info = env.step(action)
-  score += reward
+  _, rewards, dones, _ = env.step(actions)
+
+  # Update scores.
+  for i in range(len(rewards)): # len(rewards) == num_agents must be true
+    scores[i] += rewards[i]
+
+  # Update done.
+  # default done to true.
+  done = True
+  # if there is a single snake that is not done, then the env is not done.
+  for d in dones:
+    if not d:
+      done = False
+
   # Render the env
   env.render()
 
-print("Score:", int(score))
+for agent in range(num_agents):
+  score = scores[agent]
+  print("Score for agent", agent, "is:", int(score))
