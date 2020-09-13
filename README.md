@@ -18,10 +18,10 @@ I started this project as a response to the Slitherin' problem under [OpenAI's R
     1. If Snake A is sandwiched between Snake B and the wall, Snake B recognizes that only turning once it reaches the wall will trap Snake A. You can see this one the left below with the top two snakes. Note however, that this strategy must be found through planning and agents can miss it, as can be seen on the right below.
     <div class="row" align="center">
       <div class="column">
-        <img src="https://github.com/rpachauri/snake/blob/master/imgs/block_till_edge.gif" width="250">
+        <img src="https://github.com/rpachauri/snake/blob/master/imgs/block_till_edge.gif" width="100">
       </div>
       <div class="column">
-        <img src="https://github.com/rpachauri/snake/blob/master/imgs/missed_block.gif" width="250">
+        <img src="https://github.com/rpachauri/snake/blob/master/imgs/missed_block.gif" width="100">
       </div>
     </div>
     
