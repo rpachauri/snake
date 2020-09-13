@@ -16,14 +16,10 @@ I started this project as a response to the Slitherin' problem under [OpenAI's R
 *  Observed behavior: In a moderately sized environment (~20x20), the snakes are pretty competent in pursuing the food and avoiding other snakes. If we try to increase the size of the environment beyond ~40x40, the snakes aren't really able to find the fruit through planning. I document below some of the behaviors that I found interesting:
 
     1. If Snake A is sandwiched between Snake B and the wall, Snake B recognizes that only turning once it reaches the wall will trap Snake A. You can see this one the left below with the top two snakes. Note however, that this strategy must be found through planning and agents can miss it, as can be seen on the right below.
-    <div class="row" align="center">
-      <div class="column">
-        <img src="https://github.com/rpachauri/snake/blob/master/imgs/block_till_edge.gif" width="100">
-      </div>
-      <div class="column">
-        <img src="https://github.com/rpachauri/snake/blob/master/imgs/missed_block.gif" width="100">
-      </div>
-    </div>
+    <table align="center"><tr>
+    <td> <img src="https://github.com/rpachauri/snake/blob/master/imgs/block_till_edge.gif" width="200"> </td>
+    <td> <img src="https://github.com/rpachauri/snake/blob/master/imgs/missed_block.gif" width="200"> </td>
+    </tr></table>
     
     2. Snakes are able to take advantage of the confined space to trap other snakes; however, this is not a regular occurrence, so I'm not sure if I would qualify this as "ganging up" on each other. You can see this below where three snakes are killed consecutively because other agents are able to trap them.
     <div class="row" align="center">
