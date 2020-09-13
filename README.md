@@ -5,8 +5,39 @@ OpenAI Gym Environment for Snake
 
 I started this project as a response to the Slitherin' problem under [OpenAI's Request for Research 2.0](https://openai.com/blog/requests-for-research-2/).
 
-### My Response
+## My Response
+### [Singleplayer Snake](#single-player-snake)
+*  Environment: The snake starts off with a length of two facing a random direction. There only exists one fruit in the environment at a time. Each time the snake consumes the fruit, the snake grows by a length of one and the fruit's next location is randomly generated. The snake dies when it collides with itself or the wall (this is considered "losing" the game). The snake "wins" the game when its body length equals the grid's width * length (i.e. covers all available squares).
+*  Agent: I implemented the Monte Carlo Algorithm, MCTS, UCT, and DQN in that order. UCT is the most advanced planning algorithm that I implemented and I compared it with an implementation of DQN that I found from [Machine Learning with Phil](https://www.youtube.com/watch?v=SMZfgeHFFcA). Unfortunately, the DQN was not able to get better than random results even after extensive hyperparameter tuning. This is why I decided to choose UCT for my Multiplayer Snake environment.
 
+### Multiplayer Snake
+*  Environment: Each snake starts off with a length of one facing a random direction. There only exists one fruit in the environment at a time. Each time a snake consumes the fruit, the snake grows by a length of one and the fruit's next location is randomly generated. Like the problem statement says: "a snake dies when colliding with another snake, itself, or the wall; and the game ends when all snakes die." The last snake to die wins the game.
+*  Agent: The problem statement told us to solve the environment using self-play with an RL algorithm of our choice. As stated in the [Singleplayer Snake section](#single-player-snake), UCT was the best-performing agent in the single-player environment so I evaluated how it performed in the multi-player environment.
+*  Observed behavior: In a moderately sized environment (~20x20), the snakes are pretty competent in pursuing the food and avoiding other snakes. If we try to increase the size of the environment beyond ~40x40, the snakes aren't really able to find the fruit through planning. I document below some of the behaviors that I found interesting:
+
+    1. If Snake A is sandwiched between Snake B and the wall, Snake B recognizes that only turning once it reaches the wall will trap Snake A. You can see this one the left below with the top two snakes. Note however, that this strategy must be found through planning and agents can miss it, as can be seen on the right below.
+    <div class="row" align="center">
+      <div class="column">
+        <img src="https://github.com/rpachauri/snake/blob/master/imgs/block_till_edge.gif" width="250">
+      </div>
+      <div class="column">
+        <img src="https://github.com/rpachauri/snake/blob/master/imgs/missed_block.gif" width="250">
+      </div>
+    </div>
+    
+    2. Snakes are able to take advantage of the confined space to trap other snakes; however, this is not a regular occurrence, so I'm not sure if I would qualify this as "ganging up" on each other. You can see this below where three snakes are killed consecutively because other agents are able to trap them.
+    <div class="row" align="center">
+      <div class="column">
+        <img src="https://github.com/rpachauri/snake/blob/master/imgs/triple_kill.gif" width="250">
+      </div>
+    </div>
+    
+    3. We defined "winning" for an agent to be "the last snake to die." If a snake was the last snake alive, it would try to find the fastest way to die because anything it did would be considered a win. In the future, a different definition of winning might be to be the longest snake, which could encourage more aggressive tactics.
+    <div class="row" align="center">
+      <div class="column">
+        <img src="https://github.com/rpachauri/snake/blob/master/imgs/suicide.png" width="250">
+      </div>
+    </div>
 
 ## Installation
 
